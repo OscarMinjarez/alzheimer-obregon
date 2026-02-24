@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "546890173240",
+    "project_id": "azheimer-obregon",
+    "storage_bucket": "azheimer-obregon.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:546890173240:android:ad6ca07c74005a14954fcd",
+        "android_client_info": {
+          "package_name": "mx.edu.itson.alzheimerobregon"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDiFcmshuL8qlFBtKjVcW46rbE5l5RJ-nE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
