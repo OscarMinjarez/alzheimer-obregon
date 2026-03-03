@@ -21,11 +21,13 @@ package mx.edu.itson.alzheimerobregon.features.patient
  * @property diagnosis Primary diagnosis for the patient (defaults to "Alzheimer").
  * @property admissionDate Date when the patient was admitted (string, preferably ISO-8601).
  */
+import java.util.Date
+
 data class Patient(
-    val id: String = "", // Firestore document id; empty when creating a new patient
-    val name: String = "", // Given name
-    val lastName: String = "", // Family name / surname
-    val birthDate: String = "", // Date of birth as ISO-8601 string (YYYY-MM-DD recommended)
-    val diagnosis: String = "Alzheimer", // Primary diagnosis; defaults to "Alzheimer"
-    val admissionDate: String = "" // Admission date as ISO-8601 string
+    val id: String = "",
+    val name: String = "",
+    val lastName: String = "",
+    val birthDate: Date? = null,
+    val diagnosis: String = "Alzheimer",
+    val admissionDate: Date = Date()
 )
