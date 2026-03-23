@@ -2,4 +2,11 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="azul_ultramar">#1B4965</color>
+    <color name="azul_clarito">#6BA5C8</color>
+    <color name="naranja">#F2994A</color>
+    <color name="verde_spartan">#5FB88D</color>
+    <color name="blanco_cegador">#F8F9FB</color>
+    <color name="Gris">#afaead</color>
+    <color name="azul_mas_clarito">#aad8dc</color>
 </resources>
