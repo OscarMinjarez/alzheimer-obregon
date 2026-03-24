@@ -12,19 +12,15 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AlzheimerObregon">
         <activity
-            android:name=".PatientRegisterActivity"
+            android:name=".LoginActivity"
             android:exported="true"
-            android:label="Registro de Paciente">
+            android:label="Inicio de sesión">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <activity
-            android:name=".LoginActivity"
-            android:exported="false">
-        </activity>
         <activity
             android:name=".MainActivity"
             android:exported="false"></activity>
@@ -34,6 +30,9 @@
         <activity
             android:name=".EvaluationHistoryActivity"
             android:exported="false"></activity>
+        <activity
+            android:name=".PatientRegisterActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

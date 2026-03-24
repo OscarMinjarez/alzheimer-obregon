@@ -2,6 +2,7 @@ package mx.edu.itson.alzheimerobregon
 
 import android.os.Bundle
 
+import android.content.Intent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -51,12 +52,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import mx.edu.itson.alzheimerobregon.data.firebase.FirebaseAuthService
-import mx.edu.itson.alzheimerobregon.data.firebase.FirebaseFirestoreService
 import mx.edu.itson.alzheimerobregon.features.auth.AuthRepository
 import mx.edu.itson.alzheimerobregon.features.auth.AuthRepositoryImpl
-import mx.edu.itson.alzheimerobregon.features.patient.Patient
-import mx.edu.itson.alzheimerobregon.features.patient.PatientRepository
-import mx.edu.itson.alzheimerobregon.features.patient.PatientRepositoryImpl
 import mx.edu.itson.alzheimerobregon.ui.theme.AlzheimerObregonTheme
 
 class LoginActivity : ComponentActivity() {
@@ -87,7 +84,9 @@ class LoginActivity : ComponentActivity() {
         lifecycleScope.launch {
             authRepository.login(email, password)
                 .onSuccess { user ->
-                    println("Login successful for user: ${user.email}")
+                    val intent = Intent(this@LoginActivity, PatientRegisterActivity::class.java)
+                    startActivity(intent)
+                    finish()
                 }.onFailure { exception ->
                     println("Login failed: ${exception.message}")
                 }
