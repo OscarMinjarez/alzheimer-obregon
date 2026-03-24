@@ -9,4 +9,5 @@
     <string name="score_evolution_title">Evolución de puntajes</string>
     <string name="registered_evaluations_title">Evaluaciones registradas</string>
     <string name="evaluator_label">Evaluador: %s</string>
+    <string name="title_activity_patient_register">PatientRegisterActivity</string>
 </resources>
