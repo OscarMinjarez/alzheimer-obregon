@@ -9,4 +9,9 @@
     <color name="blanco_cegador">#F8F9FB</color>
     <color name="Gris">#afaead</color>
     <color name="azul_mas_clarito">#aad8dc</color>
+    <color name="Gris_fondo">#F8F9FB</color>
+    <color name="Gris_borde">#C4CBD0</color>
+    <color name="azul_claro">#EAF2F7</color>
+    <color name="azul_texto">#1B3A55</color>
+    <color name="gris_texto">#485B67</color>
 </resources>
