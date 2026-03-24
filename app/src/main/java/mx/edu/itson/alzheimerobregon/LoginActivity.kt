@@ -1,8 +1,7 @@
 package mx.edu.itson.alzheimerobregon
 
 import android.os.Bundle
-import android.widget.Button
-import android.widget.Space
+
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -13,7 +12,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -39,42 +37,70 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.CombinedModifier
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.ModifierLocalBeyondBoundsLayout
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.pm.ShortcutInfoCompat
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import mx.edu.itson.alzheimerobregon.data.firebase.FirebaseAuthService
+import mx.edu.itson.alzheimerobregon.data.firebase.FirebaseFirestoreService
+import mx.edu.itson.alzheimerobregon.features.auth.AuthRepository
+import mx.edu.itson.alzheimerobregon.features.auth.AuthRepositoryImpl
+import mx.edu.itson.alzheimerobregon.features.patient.Patient
+import mx.edu.itson.alzheimerobregon.features.patient.PatientRepository
+import mx.edu.itson.alzheimerobregon.features.patient.PatientRepositoryImpl
 import mx.edu.itson.alzheimerobregon.ui.theme.AlzheimerObregonTheme
 
 class LoginActivity : ComponentActivity() {
+
+    private lateinit var authRepository: AuthRepository
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        val authService = FirebaseAuthService()
+        this.authRepository = AuthRepositoryImpl(authService)
+
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             AlzheimerObregonTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     LoginScreen(
-                        modifier = Modifier.padding(innerPadding)
+                        modifier = Modifier.padding(innerPadding),
+                        onLogin = { email, password ->
+                            login(email, password)
+                        }
                     )
                 }
             }
         }
     }
+
+    private fun login(email: String, password: String) {
+        lifecycleScope.launch {
+            authRepository.login(email, password)
+                .onSuccess { user ->
+                    println("Login successful for user: ${user.email}")
+                }.onFailure { exception ->
+                    println("Login failed: ${exception.message}")
+                }
+        }
+    }
 }
 
 @Composable
-fun LoginScreen(modifier: Modifier = Modifier){
+
+fun LoginScreen(
+    modifier: Modifier = Modifier,
+    onLogin: (String, String) -> Unit = { _, _ -> }
+){
     var emailValue by remember { mutableStateOf("") }
     var passwordValue by remember { mutableStateOf("") }
     val scrollState = rememberScrollState()
@@ -196,7 +222,7 @@ fun LoginScreen(modifier: Modifier = Modifier){
         Spacer(modifier = Modifier.height(32.dp))
 
         Button(
-            onClick = { },
+            onClick = { onLogin(emailValue, passwordValue) },
             modifier = Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 24.dp),
             shape = RoundedCornerShape(28.dp),
             colors = ButtonDefaults.buttonColors(
@@ -208,7 +234,7 @@ fun LoginScreen(modifier: Modifier = Modifier){
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = colorResource(R.color.blanco_cegador)
-                )
+            )
         }
         Spacer(modifier = Modifier.height(16.dp))
 
