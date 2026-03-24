@@ -20,14 +20,26 @@ package mx.edu.itson.alzheimerobregon.features.patient
  * @property birthDate Patient's date of birth as a string (preferably ISO-8601).
  * @property diagnosis Primary diagnosis for the patient (defaults to "Alzheimer").
  * @property admissionDate Date when the patient was admitted (string, preferably ISO-8601).
+ * @property medicalHistory A summary of the patient's medical history.
+ * @property allergies A summary of the patient's known allergies.
+ * @property medications A summary of the patient's current medications.
+ * @property contactInfo A map containing contact information (e.g., phone, email) for the patient's primary contact person.
+ * @property secondaryContactInfo A map containing contact information for a secondary contact person, if available.
+ * @property roomNumber The hospital room number assigned to the patient.
  */
-import java.util.Date
 
 data class Patient(
     val id: String = "",
-    val name: String = "",
-    val lastName: String = "",
-    val birthDate: Date? = null,
-    val diagnosis: String = "Alzheimer",
-    val admissionDate: Date = Date()
+    val fullName: String = "",
+    val age: Int = 0,
+    val gender: String = "",
+    val address: String = "",
+    val primaryContact: Map<String, String> = emptyMap(),
+    val secondaryContact: Map<String, String> = emptyMap(),
+    val roomNumber: String = "",
+    val admissionDate: String = "",
+    val medicalHistory: String = "",
+    val allergies: String = "",
+    val medications: String = "",
+    val diagnosis: String = "Alzheimer"
 )

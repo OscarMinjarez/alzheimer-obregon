@@ -39,6 +39,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,42 +53,121 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
+import mx.edu.itson.alzheimerobregon.data.firebase.FirebaseFirestoreService
+import mx.edu.itson.alzheimerobregon.features.patient.Patient
+import mx.edu.itson.alzheimerobregon.features.patient.PatientRepository
+import mx.edu.itson.alzheimerobregon.features.patient.PatientRepositoryImpl
 import mx.edu.itson.alzheimerobregon.ui.theme.AlzheimerObregonTheme
 
+data class PatientFormState(
+    var fullName: String = "",
+    var age: String = "",
+    var gender: String = "",
+    var address: String = "",
+    var primaryContactName: String = "",
+    var primaryContactRelationship: String = "",
+    var primaryContactPhone: String = "",
+    var secondaryContactName: String = "",
+    var secondaryContactRelationship: String = "",
+    var secondaryContactPhone: String = "",
+    var roomNumber: String = "",
+    var admissionDate: String = "",
+    var medicalHistory: String = "",
+    var allergies: String = "",
+    var medications: String = ""
+)
+
 class PatientRegisterActivity : ComponentActivity() {
+
+    private fun toPatient(form: PatientFormState): Patient {
+        return Patient(
+            fullName = form.fullName,
+            age = form.age.toIntOrNull() ?: 0,
+            gender = form.gender,
+            address = form.address,
+            primaryContact = mapOf(
+                "name" to form.primaryContactName,
+                "relationship" to form.primaryContactRelationship,
+                "phone" to form.primaryContactPhone
+            ),
+            secondaryContact = mapOf(
+                "name" to form.secondaryContactName,
+                "relationship" to form.secondaryContactRelationship,
+                "phone" to form.secondaryContactPhone
+            ),
+            roomNumber = form.roomNumber,
+            admissionDate = form.admissionDate,
+            medicalHistory = form.medicalHistory,
+            allergies = form.allergies,
+            medications = form.medications
+        )
+    }
+
+    private lateinit var patientRepository: PatientRepository
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        val firestoreService = FirebaseFirestoreService()
+        patientRepository = PatientRepositoryImpl(firestoreService)
+
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+            val formState = remember { mutableStateOf(PatientFormState()) }
+            val coroutineScope = rememberCoroutineScope()
             AlzheimerObregonTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     RegisterScreen(
-
+                        formState = formState.value,
+                        onFormChange = { formState.value = it },
+                        onRegister = {
+                            println("[DEBUG] Register button pressed")
+                            coroutineScope.launch {
+                                val patient = toPatient(formState.value)
+                                println("[DEBUG] Calling patientRepository.save() with: $patient")
+                                val result = patientRepository.save(patient)
+                                val savedPatient = result.getOrNull()
+                                if (savedPatient != null) {
+                                    println("[DEBUG] Patient saved successfully: $savedPatient")
+                                    formState.value = formState.value.copy(
+                                        fullName = savedPatient.fullName,
+                                        age = savedPatient.age.toString(),
+                                        gender = savedPatient.gender,
+                                        address = savedPatient.address,
+                                        primaryContactName = savedPatient.primaryContact["name"] ?: "",
+                                        primaryContactRelationship = savedPatient.primaryContact["relationship"] ?: "",
+                                        primaryContactPhone = savedPatient.primaryContact["phone"] ?: "",
+                                        secondaryContactName = savedPatient.secondaryContact["name"] ?: "",
+                                        secondaryContactRelationship = savedPatient.secondaryContact["relationship"] ?: "",
+                                        secondaryContactPhone = savedPatient.secondaryContact["phone"] ?: "",
+                                        roomNumber = savedPatient.roomNumber,
+                                        admissionDate = savedPatient.admissionDate,
+                                        medicalHistory = savedPatient.medicalHistory,
+                                        allergies = savedPatient.allergies,
+                                        medications = savedPatient.medications
+                                    )
+                                } else {
+                                    println("[DEBUG] Error saving patient: ${result.exceptionOrNull()}")
+                                }
+                            }
+                        },
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
             }
         }
     }
+
+
 }
 
 @Composable
-fun RegisterScreen(modifier: Modifier = Modifier) {
-    var edad by remember { mutableStateOf("") }
-    var direccion by remember { mutableStateOf("") }
-    var nombreCompleto by remember { mutableStateOf("") }
-    var sexoSeleccionado by remember { mutableStateOf("") }
-    var nombreContactoP by remember { mutableStateOf("") }
-    var parentescoP by remember { mutableStateOf("") }
-    var telefonoP by remember { mutableStateOf("") }
-    var nombreContactoA by remember { mutableStateOf("") }
-    var parentescoA by remember { mutableStateOf("") }
-    var telefonoA by remember { mutableStateOf("") }
-    var habitacion by remember { mutableStateOf("") }
-    var fechaIngreso by remember { mutableStateOf("") }
-    var historialMedico by remember { mutableStateOf("") }
-    var alergias by remember { mutableStateOf("") }
-    var medicamentos by remember { mutableStateOf("") }
+fun RegisterScreen(
+    formState: PatientFormState,
+    onFormChange: (PatientFormState) -> Unit,
+    onRegister: () -> Unit,
+    modifier: Modifier = Modifier
+) {
 
     Column(
         modifier = Modifier.fillMaxSize()
@@ -142,79 +222,79 @@ fun RegisterScreen(modifier: Modifier = Modifier) {
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    Text(
-                        text = "Nombre completo *",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = colorResource(R.color.azul_ultramar)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = nombreCompleto,
-                        onValueChange = { nombreCompleto = it },
-                        placeholder = { Text("Ej: Maria Lopez Garcia") },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
-                    )
+                            Text(
+                                text = "Full name *",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = colorResource(R.color.azul_ultramar)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            OutlinedTextField(
+                                value = formState.fullName,
+                                onValueChange = { onFormChange(formState.copy(fullName = it)) },
+                                placeholder = { Text("e.g. Maria Lopez Garcia") },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp)
+                            )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    Text(
-                        text = "Edad *",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = colorResource(R.color.azul_ultramar)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = edad,
-                        onValueChange = { if (it.all { char -> char.isDigit() }) edad = it },
-                        placeholder = { Text("Ej: 78") },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                    )
+                            Text(
+                                text = "Age *",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = colorResource(R.color.azul_ultramar)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            OutlinedTextField(
+                                value = formState.age,
+                                onValueChange = { if (it.all { char -> char.isDigit() }) onFormChange(formState.copy(age = it)) },
+                                placeholder = { Text("e.g. 78") },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                            )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    Text(
-                        text = "Sexo *",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = colorResource(R.color.azul_ultramar)
-                    )
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(
-                            selected = (sexoSeleccionado == "Femenino"),
-                            onClick = { sexoSeleccionado = "Femenino" }
-                        )
-                        Text("Femenino")
-                        Spacer(modifier = Modifier.width(16.dp))
-                        RadioButton(
-                            selected = (sexoSeleccionado == "Masculino"),
-                            onClick = { sexoSeleccionado = "Masculino" }
-                        )
-                        Text("Masculino")
-                    }
+                            Text(
+                                text = "Gender *",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = colorResource(R.color.azul_ultramar)
+                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                RadioButton(
+                                    selected = (formState.gender == "Female"),
+                                    onClick = { onFormChange(formState.copy(gender = "Female")) }
+                                )
+                                Text("Female")
+                                Spacer(modifier = Modifier.width(16.dp))
+                                RadioButton(
+                                    selected = (formState.gender == "Male"),
+                                    onClick = { onFormChange(formState.copy(gender = "Male")) }
+                                )
+                                Text("Male")
+                            }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    Text(
-                        "Direccion",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = colorResource(R.color.azul_ultramar)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                "Address",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = colorResource(R.color.azul_ultramar)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
 
-                    OutlinedTextField(
-                        value = direccion,
-                        onValueChange = { direccion = it },
-                        placeholder = { Text("Ej: Calle Principal #123, Colonia Centro") },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        minLines = 3
-                    )
+                            OutlinedTextField(
+                                value = formState.address,
+                                onValueChange = { onFormChange(formState.copy(address = it)) },
+                                placeholder = { Text("e.g. Main St #123, Downtown") },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                minLines = 3
+                            )
                 }
             }
             Card(
@@ -228,20 +308,20 @@ fun RegisterScreen(modifier: Modifier = Modifier) {
                 )
             ) {
                 Column(modifier = Modifier.padding(24.dp)) {
-                    SeccionTitulo(Icons.Default.Phone, "Contacto Principal")
+                    SeccionTitulo(Icons.Default.Phone, "Primary Contact")
 
                     InputCampo(
-                        "Nombre completo *",
-                        nombreContactoP,
-                        { nombreContactoP = it },
-                        "Ej: Juana Lopez"
+                        "Full name *",
+                        formState.primaryContactName,
+                        { onFormChange(formState.copy(primaryContactName = it)) },
+                        "e.g. Juana Lopez"
                     )
-                    InputCampo("Parentesco *", parentescoP, { parentescoP = it }, "Ej: Hija")
+                    InputCampo("Relationship *", formState.primaryContactRelationship, { onFormChange(formState.copy(primaryContactRelationship = it)) }, "e.g. Daughter")
                     InputCampo(
-                        "Telefono *",
-                        telefonoP,
-                        { if (it.length <= 10) telefonoP = it },
-                        "Ej: 644 123 4567",
+                        "Phone *",
+                        formState.primaryContactPhone,
+                        { if (it.length <= 10) onFormChange(formState.copy(primaryContactPhone = it)) },
+                        "e.g. 644 123 4567",
                         KeyboardType.Phone
                     )
                 }
@@ -261,12 +341,12 @@ fun RegisterScreen(modifier: Modifier = Modifier) {
                         Icon(Icons.Default.Phone, null, tint = colorResource(R.color.azul_ultramar))
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            "Contacto Alternativo",
+                            "Secondary Contact",
                             fontWeight = FontWeight.Bold,
                             color = colorResource(R.color.azul_ultramar)
                         )
                         Text(
-                            " (Opcional)",
+                            " (Optional)",
                             color = colorResource(R.color.gris_texto),
                             fontSize = 12.sp
                         )
@@ -274,17 +354,17 @@ fun RegisterScreen(modifier: Modifier = Modifier) {
 
                     Spacer(modifier = Modifier.height(16.dp))
                     InputCampo(
-                        "Nombre completo",
-                        nombreContactoA,
-                        { nombreContactoA = it },
-                        "Ej: Juana Lopez"
+                        "Full name",
+                        formState.secondaryContactName,
+                        { onFormChange(formState.copy(secondaryContactName = it)) },
+                        "e.g. Juana Lopez"
                     )
-                    InputCampo("Parentesco", parentescoA, { parentescoA = it }, "Ej: Hija")
+                    InputCampo("Relationship", formState.secondaryContactRelationship, { onFormChange(formState.copy(secondaryContactRelationship = it)) }, "e.g. Daughter")
                     InputCampo(
-                        "Telefono",
-                        telefonoA,
-                        { if (it.length <= 10) telefonoA = it },
-                        "Ej: 644 123 4567",
+                        "Phone",
+                        formState.secondaryContactPhone,
+                        { if (it.length <= 10) onFormChange(formState.copy(secondaryContactPhone = it)) },
+                        "e.g. 644 123 4567",
                         KeyboardType.Phone
                     )
                 }
@@ -299,18 +379,18 @@ fun RegisterScreen(modifier: Modifier = Modifier) {
                 border = BorderStroke(1.dp, colorResource(R.color.gris_texto))
             ) {
                 Column(modifier = Modifier.padding(24.dp)) {
-                    SeccionTitulo(Icons.Default.LocationOn, "Informacion del Centro")
+                    SeccionTitulo(Icons.Default.LocationOn, "Facility Information")
 
-                    InputCampo("Habitacion/Sala", habitacion, { habitacion = it }, "Ej: Sala 201")
+                    InputCampo("Room/Area", formState.roomNumber, { onFormChange(formState.copy(roomNumber = it)) }, "e.g. Room 201")
 
                     Text(
-                        "Fecha de Ingreso",
+                        "Admission Date",
                         fontWeight = FontWeight.Bold,
                         color = colorResource(R.color.azul_ultramar)
                     )
                     OutlinedTextField(
-                        value = fechaIngreso,
-                        onValueChange = { fechaIngreso = it },
+                        value = formState.admissionDate,
+                        onValueChange = { onFormChange(formState.copy(admissionDate = it)) },
                         placeholder = { Text("mm/dd/yyyy") },
                         modifier = Modifier.fillMaxWidth(),
                         trailingIcon = { Icon(Icons.Default.DateRange, null) },
@@ -328,31 +408,31 @@ fun RegisterScreen(modifier: Modifier = Modifier) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Add, null, tint = colorResource(R.color.azul_ultramar))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Informacion Médica", fontWeight = FontWeight.Bold, color = colorResource(R.color.azul_ultramar), fontSize = 18.sp)
-                        Text(" (Opcional)", color = colorResource(R.color.gris_texto), fontSize = 12.sp)
+                        Text("Medical Information", fontWeight = FontWeight.Bold, color = colorResource(R.color.azul_ultramar), fontSize = 18.sp)
+                        Text(" (Optional)", color = colorResource(R.color.gris_texto), fontSize = 12.sp)
                     }
 
                     Spacer(modifier = Modifier.height(20.dp))
 
                     InputCampo(
-                        label = "Historial Médico",
-                        value = historialMedico,
-                        onValueChange = { historialMedico = it },
-                        placeholder = "Ej: Hipertension, diabetes tipo 2, diagnostico de demencia en 2020..."
+                        label = "Medical History",
+                        value = formState.medicalHistory,
+                        onValueChange = { onFormChange(formState.copy(medicalHistory = it)) },
+                        placeholder = "e.g. Hypertension, type 2 diabetes, dementia diagnosis in 2020..."
                     )
 
                     InputCampo(
-                        label = "Alergias",
-                        value = alergias,
-                        onValueChange = { alergias = it },
-                        placeholder = "Ej: Penicilina, polen, lactosa"
+                        label = "Allergies",
+                        value = formState.allergies,
+                        onValueChange = { onFormChange(formState.copy(allergies = it)) },
+                        placeholder = "e.g. Penicillin, pollen, lactose"
                     )
 
                     InputCampo(
-                        label = "Medicamentos Actuales",
-                        value = medicamentos,
-                        onValueChange = { medicamentos = it },
-                        placeholder = "Ej: Donepezilo 10mg (1 vez al dia), Enalapril 5 mg (2 veces al dia)..."
+                        label = "Current Medications",
+                        value = formState.medications,
+                        onValueChange = { onFormChange(formState.copy(medications = it)) },
+                        placeholder = "e.g. Donepezil 10mg (once daily), Enalapril 5mg (twice daily)..."
                     )
                 }
             }
@@ -364,13 +444,13 @@ fun RegisterScreen(modifier: Modifier = Modifier) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 TextButton(onClick = {  }) {
-                    Text("Cancelar", color = colorResource(R.color.azul_ultramar), fontWeight = FontWeight.Bold)
+                    Text("Cancel", color = colorResource(R.color.azul_ultramar), fontWeight = FontWeight.Bold)
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Button(
-                    onClick = {  },
+                    onClick = onRegister,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
@@ -380,7 +460,7 @@ fun RegisterScreen(modifier: Modifier = Modifier) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Save, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Registrar paciente", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        Text("Register patient", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                     }
                 }
                 Spacer(modifier = Modifier.height(32.dp))
@@ -449,7 +529,7 @@ fun EncabezadoFijo(onBackClick: () -> Unit) {
         IconButton(onClick = onBackClick) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Volver atrás",
+                contentDescription = "Go back",
                 tint = colorResource(R.color.azul_ultramar)
             )
         }
@@ -457,13 +537,13 @@ fun EncabezadoFijo(onBackClick: () -> Unit) {
             modifier = Modifier.weight(1f)
         ) {
             Text(
-                "Registrar nuevo paciente",
+                "Register new patient",
                 color = colorResource(R.color.azul_ultramar),
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                "Complete los datos del paciente",
+                "Complete the patient data",
                 color = colorResource(R.color.gris_texto),
                 fontSize = 14.sp
             )
@@ -474,7 +554,12 @@ fun EncabezadoFijo(onBackClick: () -> Unit) {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun RegisterScreenPreview() {
+    val formState = remember { mutableStateOf(PatientFormState()) }
     AlzheimerObregonTheme {
-        RegisterScreen()
+        RegisterScreen(
+            formState = formState.value,
+            onFormChange = { formState.value = it },
+            onRegister = {},
+        )
     }
 }
