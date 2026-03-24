@@ -11,12 +11,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.AlzheimerObregon">
-
         <activity
-            android:name=".LoginActivity"
+            android:name=".PatientRegisterActivity"
             android:exported="true"
-            android:label="@string/title_activity_login"
-            android:theme="@style/Theme.AlzheimerObregon" >
+            android:label="Registro de Paciente">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -24,20 +22,18 @@
         </activity>
 
         <activity
-            android:name=".MainActivity"
+            android:name=".LoginActivity"
             android:exported="false">
         </activity>
+        <activity
+            android:name=".MainActivity"
+            android:exported="false"></activity>
         <activity
             android:name=".InstrumentActivity"
-            android:exported="false">
-        </activity>
-
-
+            android:exported="false"></activity>
         <activity
             android:name=".EvaluationHistoryActivity"
-            android:exported="false">
-        </activity>
-
+            android:exported="false"></activity>
     </application>
 
 </manifest>
