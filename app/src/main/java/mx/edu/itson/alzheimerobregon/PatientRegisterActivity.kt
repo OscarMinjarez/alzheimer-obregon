@@ -36,6 +36,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -46,6 +47,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
@@ -115,6 +117,7 @@ class PatientRegisterActivity : ComponentActivity() {
         setContent {
             val formState = remember { mutableStateOf(PatientFormState()) }
             val coroutineScope = rememberCoroutineScope()
+            val feedbackMessage = remember { mutableStateOf<String?>(null) }
             AlzheimerObregonTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     RegisterScreen(
@@ -146,11 +149,15 @@ class PatientRegisterActivity : ComponentActivity() {
                                         allergies = savedPatient.allergies,
                                         medications = savedPatient.medications
                                     )
+                                    feedbackMessage.value = "Patient registered successfully!"
                                 } else {
                                     println("[DEBUG] Error saving patient: ${result.exceptionOrNull()}")
+                                    feedbackMessage.value = "Error registering patient. Please try again."
                                 }
                             }
                         },
+                        feedbackMessage = feedbackMessage.value,
+                        onFeedbackShown = { feedbackMessage.value = null },
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
@@ -166,6 +173,8 @@ fun RegisterScreen(
     formState: PatientFormState,
     onFormChange: (PatientFormState) -> Unit,
     onRegister: () -> Unit,
+    feedbackMessage: String? = null,
+    onFeedbackShown: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
 
@@ -464,6 +473,23 @@ fun RegisterScreen(
                     }
                 }
                 Spacer(modifier = Modifier.height(32.dp))
+            }
+        }
+
+        feedbackMessage?.let { message ->
+            // Mostrar mensaje de éxito o error
+            Snackbar(
+                modifier = Modifier.padding(16.dp),
+                action = {
+                    TextButton(onClick = onFeedbackShown) {
+                        Text("OK", color = Color.White)
+                    }
+                }
+            ) {
+                Text(
+                    text = message,
+                    color = Color.White
+                )
             }
         }
     }

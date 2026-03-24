@@ -3,6 +3,8 @@ package mx.edu.itson.alzheimerobregon
 import android.os.Bundle
 
 import android.content.Intent
+import android.content.Context
+import android.content.SharedPreferences
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -58,11 +60,29 @@ import mx.edu.itson.alzheimerobregon.ui.theme.AlzheimerObregonTheme
 
 class LoginActivity : ComponentActivity() {
 
+    companion object {
+        private const val PREFS_NAME = "user_prefs"
+        private const val KEY_UID = "user_uid"
+    }
+
     private lateinit var authRepository: AuthRepository
+
+    private lateinit var sharedPreferences: SharedPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val authService = FirebaseAuthService()
         this.authRepository = AuthRepositoryImpl(authService)
+        sharedPreferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+
+        // Verificar si ya hay sesión guardada
+        val savedUid = sharedPreferences.getString(KEY_UID, null)
+        if (savedUid != null) {
+            // Usuario ya autenticado, saltar login
+            val intent = Intent(this@LoginActivity, PatientRegisterActivity::class.java)
+            startActivity(intent)
+            finish()
+            return
+        }
 
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -84,6 +104,8 @@ class LoginActivity : ComponentActivity() {
         lifecycleScope.launch {
             authRepository.login(email, password)
                 .onSuccess { user ->
+                    // Guardar UID en SharedPreferences
+                    sharedPreferences.edit().putString(KEY_UID, user.uid).apply()
                     val intent = Intent(this@LoginActivity, PatientRegisterActivity::class.java)
                     startActivity(intent)
                     finish()
