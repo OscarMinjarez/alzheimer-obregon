@@ -1,4 +1,4 @@
-package mx.edu.itson.alzheimerobregon
+package mx.edu.itson.alzheimerobregon.features.evaluation.ui
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -22,9 +22,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import mx.edu.itson.alzheimerobregon.R
 import mx.edu.itson.alzheimerobregon.ui.theme.AlzheimerObregonTheme
 
-class InstrumentActivity : ComponentActivity() {
+class InstrumentsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()

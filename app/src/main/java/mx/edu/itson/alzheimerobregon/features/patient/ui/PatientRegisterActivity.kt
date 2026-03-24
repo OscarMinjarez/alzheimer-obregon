@@ -1,4 +1,4 @@
-package mx.edu.itson.alzheimerobregon
+package mx.edu.itson.alzheimerobregon.features.patient.ui
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -56,6 +56,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
+import mx.edu.itson.alzheimerobregon.R
 import mx.edu.itson.alzheimerobregon.data.firebase.FirebaseFirestoreService
 import mx.edu.itson.alzheimerobregon.features.patient.Patient
 import mx.edu.itson.alzheimerobregon.features.patient.PatientRepository

@@ -1,9 +1,8 @@
-package mx.edu.itson.alzheimerobregon
+package mx.edu.itson.alzheimerobregon.features.auth.ui
 
 import android.os.Bundle
 
 import android.content.Intent
-import android.content.Context
 import android.content.SharedPreferences
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -53,9 +52,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
+import mx.edu.itson.alzheimerobregon.R
 import mx.edu.itson.alzheimerobregon.data.firebase.FirebaseAuthService
 import mx.edu.itson.alzheimerobregon.features.auth.AuthRepository
 import mx.edu.itson.alzheimerobregon.features.auth.AuthRepositoryImpl
+import mx.edu.itson.alzheimerobregon.features.patient.ui.PatientRegisterActivity
 import mx.edu.itson.alzheimerobregon.ui.theme.AlzheimerObregonTheme
 
 class LoginActivity : ComponentActivity() {
@@ -72,7 +73,7 @@ class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         val authService = FirebaseAuthService()
         this.authRepository = AuthRepositoryImpl(authService)
-        sharedPreferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        sharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
 
         // Verificar si ya hay sesión guardada
         val savedUid = sharedPreferences.getString(KEY_UID, null)
