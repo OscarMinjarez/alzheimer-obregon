@@ -15,4 +15,7 @@
     <color name="azul_texto">#1B3A55</color>
     <color name="gris_texto">#485B67</color>
     <color name="rojo_rodolfo">#830711</color>
+    <color name="gris_letras">#485B67</color>
+
+
 </resources>
