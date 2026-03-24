@@ -34,5 +34,6 @@ data class Evaluation(
     val applicationDate: Date = Date(),
     val totalScore: Int = 0,
     val details: Map<String, Int> = emptyMap(),
-    val notes: String = ""
+    val notes: String = "",
+    val evaluator: String = ""
 )

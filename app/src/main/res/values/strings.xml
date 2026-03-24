@@ -1,4 +1,12 @@
 <resources>
     <string name="app_name">AlzheimerObregon</string>
     <string name="title_activity_login">LoginActivity</string>
+    <string name="back_button">Volver</string>
+    <string name="evaluation_history_title">Historial de evaluaciones</string>
+    <string name="filter_all">Todos</string>
+    <string name="filter_mmse">MMSE</string>
+    <string name="filter_tinetti">Tinetti</string>
+    <string name="score_evolution_title">Evolución de puntajes</string>
+    <string name="registered_evaluations_title">Evaluaciones registradas</string>
+    <string name="evaluator_label">Evaluador: %s</string>
 </resources>
