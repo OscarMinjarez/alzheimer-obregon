@@ -95,7 +95,7 @@ fun InstrumentScreen(modifier: Modifier = Modifier, patientId: String?) {
             Text(
                 text = "Alexa Lopez",
                 fontSize = 18.sp,
-                color = Color.Gray
+                color = colorResource(id = R.color.gris_texto)
             )
         }
 
@@ -257,15 +257,17 @@ fun InstrumentCard(
             Button(
                 onClick = { },
                 modifier = Modifier
+                    .widthIn(max = 320.dp)
                     .fillMaxWidth()
-                    .height(48.dp),
+                    .height(48.dp)
+                    .align(Alignment.CenterHorizontally),
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = colorResource(id = R.color.azul_ultramar)
                 )
             ) {
                 Text(
-                    text = "Aplicar ahora",
+                    text = "Aplicar $title ahora",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
