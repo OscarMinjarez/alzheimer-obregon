@@ -1,10 +1,12 @@
 package mx.edu.itson.alzheimerobregon.features.patient.ui
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -119,46 +121,35 @@ class PatientRegisterActivity : ComponentActivity() {
             val formState = remember { mutableStateOf(PatientFormState()) }
             val coroutineScope = rememberCoroutineScope()
             val feedbackMessage = remember { mutableStateOf<String?>(null) }
+            val context = this // Para navegación
             AlzheimerObregonTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     RegisterScreen(
                         formState = formState.value,
                         onFormChange = { formState.value = it },
                         onRegister = {
-                            println("[DEBUG] Register button pressed")
                             coroutineScope.launch {
                                 val patient = toPatient(formState.value)
-                                println("[DEBUG] Calling patientRepository.save() with: $patient")
                                 val result = patientRepository.save(patient)
                                 val savedPatient = result.getOrNull()
                                 if (savedPatient != null) {
-                                    println("[DEBUG] Patient saved successfully: $savedPatient")
-                                    formState.value = formState.value.copy(
-                                        fullName = savedPatient.fullName,
-                                        age = savedPatient.age.toString(),
-                                        gender = savedPatient.gender,
-                                        address = savedPatient.address,
-                                        primaryContactName = savedPatient.primaryContact["name"] ?: "",
-                                        primaryContactRelationship = savedPatient.primaryContact["relationship"] ?: "",
-                                        primaryContactPhone = savedPatient.primaryContact["phone"] ?: "",
-                                        secondaryContactName = savedPatient.secondaryContact["name"] ?: "",
-                                        secondaryContactRelationship = savedPatient.secondaryContact["relationship"] ?: "",
-                                        secondaryContactPhone = savedPatient.secondaryContact["phone"] ?: "",
-                                        roomNumber = savedPatient.roomNumber,
-                                        admissionDate = savedPatient.admissionDate,
-                                        medicalHistory = savedPatient.medicalHistory,
-                                        allergies = savedPatient.allergies,
-                                        medications = savedPatient.medications
-                                    )
                                     feedbackMessage.value = "Patient registered successfully!"
+                                    // Ir a PatientsActivity
+                                    val intent = Intent(context, PatientsActivity::class.java)
+                                    context.startActivity(intent)
+                                    finish()
                                 } else {
-                                    println("[DEBUG] Error saving patient: ${result.exceptionOrNull()}")
                                     feedbackMessage.value = "Error registering patient. Please try again."
                                 }
                             }
                         },
                         feedbackMessage = feedbackMessage.value,
                         onFeedbackShown = { feedbackMessage.value = null },
+                        onCancel = {
+                            val intent = Intent(context, PatientsActivity::class.java)
+                            context.startActivity(intent)
+                            finish()
+                        },
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
@@ -176,6 +167,7 @@ fun RegisterScreen(
     onRegister: () -> Unit,
     feedbackMessage: String? = null,
     onFeedbackShown: () -> Unit = {},
+    onCancel: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
 
@@ -183,9 +175,7 @@ fun RegisterScreen(
         modifier = Modifier.fillMaxSize()
     ) {
         EncabezadoFijo(
-            onBackClick = {
-
-            }
+            onBackClick = onCancel
         )
         HorizontalDivider(thickness = 2.dp, color = colorResource(R.color.gris_texto))
 
@@ -453,8 +443,8 @@ fun RegisterScreen(
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                TextButton(onClick = {  }) {
-                    Text("Cancel", color = colorResource(R.color.azul_ultramar), fontWeight = FontWeight.Bold)
+                TextButton(onClick = onCancel) {
+                    Text("Cancelar")
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -590,4 +580,3 @@ fun RegisterScreenPreview() {
         )
     }
 }
-

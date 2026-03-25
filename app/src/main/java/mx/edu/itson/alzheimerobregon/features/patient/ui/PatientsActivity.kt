@@ -1,11 +1,13 @@
 package mx.edu.itson.alzheimerobregon.features.patient.ui
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -42,6 +45,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import mx.edu.itson.alzheimerobregon.ui.theme.AlzheimerObregonTheme
 import mx.edu.itson.alzheimerobregon.R
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 
 
 class PatientsActivity : ComponentActivity() {
@@ -72,6 +77,7 @@ fun PatientsScreen(
 ) {
     val patients by viewModel.patients.collectAsState()
     val error by viewModel.error.collectAsState()
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     // Lanzar la carga de pacientes solo una vez
     LaunchedEffect(Unit) {
@@ -92,42 +98,63 @@ fun PatientsScreen(
         colorResource(R.color.naranja)
     )
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(colorResource(R.color.Gris_fondo))
-    ) {
-        HeaderPacientes(
-            hasNotifications = true,
-            onNotificationClick = {}
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        SearchBarPacientes()
-        Spacer(modifier = Modifier.height(12.dp))
-        FiltrosPacientes()
-        Spacer(modifier = Modifier.height(16.dp))
-        if (error != null) {
-            Text(
-                text = error ?: "",
-                color = Color.Red,
-                modifier = Modifier.padding(16.dp)
-            )
-        }
+    Box(modifier = modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
-                .verticalScroll(rememberScrollState())
+                .fillMaxSize()
+                .background(colorResource(R.color.Gris_fondo))
         ) {
-            patients.forEachIndexed { index, patient ->
-                val imageRes = profileImages[index % profileImages.size]
-                val statusColor = statusColors[index % statusColors.size]
-                PatientCardItem(
-                    name = patient.fullName,
-                    info = "${patient.age} años • ${patient.gender} • Sala ${patient.roomNumber}",
-                    lastEval = "Admitido: ${patient.admissionDate}",
-                    statusColor = statusColor,
-                    imageRes = imageRes
+            HeaderPacientes(
+                hasNotifications = true,
+                onNotificationClick = {}
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            SearchBarPacientes()
+            Spacer(modifier = Modifier.height(12.dp))
+            FiltrosPacientes()
+            Spacer(modifier = Modifier.height(16.dp))
+            if (error != null) {
+                Text(
+                    text = error ?: "",
+                    color = Color.Red,
+                    modifier = Modifier.padding(16.dp)
                 )
             }
+            Column(
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+            ) {
+                patients.forEachIndexed { index, patient ->
+                    val imageRes = profileImages[index % profileImages.size]
+                    val statusColor = statusColors[index % statusColors.size]
+                    PatientCardItem(
+                        name = patient.fullName,
+                        info = "${patient.age} años • ${patient.gender} • Sala ${patient.roomNumber}",
+                        lastEval = "Admitido: ${patient.admissionDate}",
+                        statusColor = statusColor,
+                        imageRes = imageRes,
+                        onClick = {
+                            val intent = Intent(context, PatientDetailActivity::class.java)
+                            intent.putExtra("patient_id", patient.id)
+                            context.startActivity(intent)
+                        }
+                    )
+                }
+            }
+        }
+        FloatingActionButton(
+            onClick = {
+                val intent = Intent(context, PatientRegisterActivity::class.java)
+                context.startActivity(intent)
+            },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(24.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "Agregar paciente"
+            )
         }
     }
 }
@@ -266,52 +293,46 @@ fun PatientCardItem(
     info: String,
     lastEval: String,
     statusColor: Color,
-    imageRes: Int
+    imageRes: Int,
+    onClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 8.dp)
-            .height(115.dp),
+            .height(115.dp)
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         border = BorderStroke(1.dp, colorResource(R.color.Gris_borde)),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
-
         Row(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-
             Icon(
                 painter = painterResource(id = imageRes),
                 contentDescription = null,
                 tint = Color.Unspecified,
                 modifier = Modifier.size(66.dp)
             )
-
             Spacer(modifier = Modifier.width(12.dp))
-
             Column(modifier = Modifier.weight(1f)) {
-
                 Text(
                     text = name,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Color.Black
                 )
-
                 Spacer(modifier = Modifier.height(4.dp))
-
                 Text(
                     text = info,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = colorResource(R.color.gris_texto)
                 )
-
                 Text(
                     text = lastEval,
                     fontSize = 13.sp,

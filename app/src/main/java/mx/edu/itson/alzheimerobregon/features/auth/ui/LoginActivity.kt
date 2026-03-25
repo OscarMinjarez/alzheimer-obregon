@@ -57,6 +57,7 @@ import mx.edu.itson.alzheimerobregon.data.firebase.FirebaseAuthService
 import mx.edu.itson.alzheimerobregon.features.auth.AuthRepository
 import mx.edu.itson.alzheimerobregon.features.auth.AuthRepositoryImpl
 import mx.edu.itson.alzheimerobregon.features.patient.ui.PatientRegisterActivity
+import mx.edu.itson.alzheimerobregon.features.patient.ui.PatientsActivity
 import mx.edu.itson.alzheimerobregon.ui.theme.AlzheimerObregonTheme
 
 class LoginActivity : ComponentActivity() {
@@ -79,7 +80,7 @@ class LoginActivity : ComponentActivity() {
         val savedUid = sharedPreferences.getString(KEY_UID, null)
         if (savedUid != null) {
             // Usuario ya autenticado, saltar login
-            val intent = Intent(this@LoginActivity, PatientRegisterActivity::class.java)
+            val intent = Intent(this@LoginActivity, PatientsActivity::class.java)
             startActivity(intent)
             finish()
             return
@@ -107,7 +108,7 @@ class LoginActivity : ComponentActivity() {
                 .onSuccess { user ->
                     // Guardar UID en SharedPreferences
                     sharedPreferences.edit().putString(KEY_UID, user.uid).apply()
-                    val intent = Intent(this@LoginActivity, PatientRegisterActivity::class.java)
+                    val intent = Intent(this@LoginActivity, PatientsActivity::class.java)
                     startActivity(intent)
                     finish()
                 }.onFailure { exception ->

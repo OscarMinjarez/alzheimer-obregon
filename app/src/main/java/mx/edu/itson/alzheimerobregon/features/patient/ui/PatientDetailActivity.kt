@@ -19,6 +19,8 @@ import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -39,10 +41,21 @@ class PatientDetailActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        val patientId = intent.getStringExtra("patient_id")
+
         setContent {
             AlzheimerObregonTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    PatientDetailScreen(modifier = Modifier.padding(innerPadding))
+                    val viewModel: PatientDetailViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+                    if (patientId != null) {
+                        androidx.compose.runtime.LaunchedEffect(patientId) {
+                            viewModel.fetchPatient(patientId)
+                        }
+                    }
+                    PatientDetailScreen(
+                        modifier = Modifier.padding(innerPadding),
+                        viewModel = viewModel
+                    )
                 }
             }
         }
@@ -50,7 +63,15 @@ class PatientDetailActivity : ComponentActivity() {
 }
 
 @Composable
-fun PatientDetailScreen(modifier: Modifier = Modifier) {
+fun PatientDetailScreen(
+    modifier: Modifier = Modifier,
+    viewModel: PatientDetailViewModel
+) {
+    val patientState = viewModel.patient.collectAsState()
+    val errorState = viewModel.error.collectAsState()
+    val patient = patientState.value
+    val error = errorState.value
+    val context = androidx.compose.ui.platform.LocalContext.current
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -64,23 +85,29 @@ fun PatientDetailScreen(modifier: Modifier = Modifier) {
             )
             .verticalScroll(rememberScrollState())
     ) {
-
-        HeaderVolver()
-
+        HeaderVolver(onBack = {
+            val intent = android.content.Intent(context, PatientsActivity::class.java)
+            context.startActivity(intent)
+            if (context is android.app.Activity) {
+                context.finish()
+            }
+        })
         Spacer(modifier = Modifier.height(16.dp))
-
-        PatientInfoCard()
-
+        if (error != null) {
+            Text(
+                text = error,
+                color = Color.Red,
+                modifier = Modifier.padding(16.dp)
+            )
+        }
+        patient?.let {
+            PatientInfoCard(patient = it)
+        }
         Spacer(modifier = Modifier.height(16.dp))
-
         ButtonEvaluacion()
-
         Spacer(modifier = Modifier.height(16.dp))
-
         AccionesRapidas()
-
         Spacer(modifier = Modifier.height(24.dp))
-
         Text(
             text = "Historial de evaluaciones",
             fontSize = 24.sp,
@@ -88,23 +115,20 @@ fun PatientDetailScreen(modifier: Modifier = Modifier) {
             color = Color.Black,
             modifier = Modifier.padding(horizontal = 20.dp)
         )
-
         Spacer(modifier = Modifier.height(16.dp))
-
         EvaluationCard("Mini-Mental State Examination", "MMSE", "22", "30", "14/1/2026", "3")
         EvaluationCard("Escala de Tinetti", "Tinetti", "20", "28", "14/1/2026", "1")
-
         Spacer(modifier = Modifier.height(32.dp))
     }
 }
 
 @Composable
-fun HeaderVolver() {
+fun HeaderVolver(onBack: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 20.dp)
-            .clickable { },
+            .clickable { onBack() },
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
@@ -126,7 +150,7 @@ fun HeaderVolver() {
 }
 
 @Composable
-fun PatientInfoCard() {
+fun PatientInfoCard(patient: mx.edu.itson.alzheimerobregon.features.patient.Patient) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -136,34 +160,26 @@ fun PatientInfoCard() {
         border = BorderStroke(1.dp, Color(0xFFC4CBD0)),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
-
         Column(modifier = Modifier.padding(16.dp)) {
-
             Row(verticalAlignment = Alignment.CenterVertically) {
-
                 Icon(
                     painter = painterResource(R.drawable.paciente1),
                     contentDescription = null,
                     modifier = Modifier.size(66.dp),
                     tint = Color.Unspecified
                 )
-
                 Spacer(modifier = Modifier.width(12.dp))
-
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Alexa Lopez", fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = Color.Black)
-                    Text("78 años • Femenino • Sala 201", fontSize = 13.sp, fontWeight = FontWeight.Medium, color = Color.Black)
+                    Text(patient.fullName, fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = Color.Black)
+                    Text("${patient.age} años • ${patient.gender} • Sala ${patient.roomNumber}", fontSize = 13.sp, fontWeight = FontWeight.Medium, color = Color.Black)
                 }
-
                 Box(
                     modifier = Modifier
                         .size(12.dp)
                         .background(colorResource(R.color.verde_spartan), CircleShape)
                 )
             }
-
             Spacer(modifier = Modifier.height(12.dp))
-
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
@@ -176,25 +192,22 @@ fun PatientInfoCard() {
                         .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-
                     Icon(
                         Icons.Default.Phone,
                         contentDescription = null,
                         tint = Color.Black,
                         modifier = Modifier.size(20.dp)
                     )
-
                     Spacer(modifier = Modifier.width(12.dp))
-
                     Column {
                         Text(
-                            "Juana Lopez (hija)",
+                            patient.primaryContact["name"] ?: "Sin contacto",
                             fontSize = 13.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = Color.Black
                         )
                         Text(
-                            "644 123 4567",
+                            patient.primaryContact["phone"] ?: "",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium,
                             color = colorResource(id = R.color.gris_texto)
@@ -328,6 +341,6 @@ fun EvaluationCard(
 @Composable
 fun PatientDetailPreview() {
     AlzheimerObregonTheme {
-        PatientDetailScreen()
+        PatientDetailScreen(viewModel = remember { PatientDetailViewModel() })
     }
 }
