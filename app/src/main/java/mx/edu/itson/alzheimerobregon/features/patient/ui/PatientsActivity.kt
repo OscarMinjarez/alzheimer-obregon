@@ -28,13 +28,16 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import mx.edu.itson.alzheimerobregon.ui.theme.AlzheimerObregonTheme
@@ -46,15 +49,15 @@ class PatientsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
         setContent {
             AlzheimerObregonTheme {
                 Scaffold(
                     modifier = Modifier.fillMaxSize()
                 ) { innerPadding ->
-
+                    val viewModel: PatientsViewModel = viewModel()
                     PatientsScreen(
-                        modifier = Modifier.padding(innerPadding)
+                        modifier = Modifier.padding(innerPadding),
+                        viewModel = viewModel
                     )
                 }
             }
@@ -64,66 +67,67 @@ class PatientsActivity : ComponentActivity() {
 
 @Composable
 fun PatientsScreen(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: PatientsViewModel
 ) {
+    val patients by viewModel.patients.collectAsState()
+    val error by viewModel.error.collectAsState()
+
+    // Lanzar la carga de pacientes solo una vez
+    LaunchedEffect(Unit) {
+        viewModel.fetchPatients()
+    }
+
+    // Lista de imágenes de perfil disponibles
+    val profileImages: List<Int> = listOf(
+        R.drawable.paciente1,
+        R.drawable.paciente2,
+        R.drawable.paciente3,
+        R.drawable.paciente4
+    )
+    // Lista de colores de estado
+    val statusColors: List<Color> = listOf(
+        colorResource(R.color.verde_spartan),
+        colorResource(R.color.rojo_rodolfo),
+        colorResource(R.color.naranja)
+    )
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(colorResource(R.color.Gris_fondo))
     ) {
-
         HeaderPacientes(
             hasNotifications = true,
             onNotificationClick = {}
         )
-
         Spacer(modifier = Modifier.height(8.dp))
-
         SearchBarPacientes()
-
         Spacer(modifier = Modifier.height(12.dp))
-
         FiltrosPacientes()
-
         Spacer(modifier = Modifier.height(16.dp))
-
+        if (error != null) {
+            Text(
+                text = error ?: "",
+                color = Color.Red,
+                modifier = Modifier.padding(16.dp)
+            )
+        }
         Column(
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
         ) {
-
-            PatientCardItem(
-                name = "Alexa Lopez",
-                info = "78 años • Femenino • Sala 201",
-                lastEval = "Última evaluación: 14/01/2026",
-                statusColor = colorResource(R.color.verde_spartan),
-                imageRes = R.drawable.paciente1
-            )
-
-            PatientCardItem(
-                name = "Oswaldo Palomino",
-                info = "82 años • Masculino • Sala 202",
-                lastEval = "Última evaluación: 19/09/2025",
-                statusColor = colorResource(R.color.rojo_rodolfo),
-                imageRes = R.drawable.paciente2
-            )
-
-            PatientCardItem(
-                name = "Karim Martinez",
-                info = "75 años • Masculino • Sala 203",
-                lastEval = "Última evaluación: 09/12/2025",
-                statusColor = colorResource(R.color.naranja),
-                imageRes = R.drawable.paciente3
-            )
-
-            PatientCardItem(
-                name = "Carmen Rodriguez",
-                info = "80 años • Femenino • Sala 101",
-                lastEval = "Última evaluación: 31/01/2026",
-                statusColor = colorResource(R.color.verde_spartan),
-                imageRes = R.drawable.paciente4
-            )
+            patients.forEachIndexed { index, patient ->
+                val imageRes = profileImages[index % profileImages.size]
+                val statusColor = statusColors[index % statusColors.size]
+                PatientCardItem(
+                    name = patient.fullName,
+                    info = "${patient.age} años • ${patient.gender} • Sala ${patient.roomNumber}",
+                    lastEval = "Admitido: ${patient.admissionDate}",
+                    statusColor = statusColor,
+                    imageRes = imageRes
+                )
+            }
         }
     }
 }
@@ -322,13 +326,5 @@ fun PatientCardItem(
                     .background(statusColor, CircleShape)
             )
         }
-    }
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun PatientsScreenPreview() {
-    AlzheimerObregonTheme {
-        PatientsScreen()
     }
 }

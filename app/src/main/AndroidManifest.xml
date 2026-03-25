@@ -12,9 +12,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AlzheimerObregon">
         <activity
-            android:name=".LoginActivity"
+            android:name=".features.patient.ui.PatientsActivity"
             android:exported="true"
-            android:label="Inicio de sesión">
+            android:label="Pacientes">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
