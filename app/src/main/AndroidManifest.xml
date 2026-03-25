@@ -36,6 +36,14 @@
             android:name=".features.patient.ui.PatientRegisterActivity"
             android:exported="true"
             android:label="Registrar paciente" />
+        <activity
+            android:name=".features.evaluation.ui.EvaluationHistoryActivity"
+            android:exported="true"
+            android:label="Historial de evaluaciones" />
+        <activity
+            android:name=".features.evaluation.ui.InstrumentsActivity"
+            android:exported="true"
+            android:label="Seleccionar instrumento" />
     </application>
 
 </manifest>

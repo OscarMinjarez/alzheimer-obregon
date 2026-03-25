@@ -29,11 +29,13 @@ class InstrumentsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        val patientId = intent.getStringExtra("patient_id")
         setContent {
             AlzheimerObregonTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     InstrumentScreen(
-                        modifier = Modifier.padding(innerPadding)
+                        modifier = Modifier.padding(innerPadding),
+                        patientId = patientId
                     )
                 }
             }
@@ -42,8 +44,9 @@ class InstrumentsActivity : ComponentActivity() {
 }
 
 @Composable
-fun InstrumentScreen(modifier: Modifier = Modifier) {
+fun InstrumentScreen(modifier: Modifier = Modifier, patientId: String?) {
     val scrollState = rememberScrollState()
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     Column(
         modifier = modifier
@@ -70,7 +73,14 @@ fun InstrumentScreen(modifier: Modifier = Modifier) {
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = colorResource(id = R.color.azul_ultramar),
-                modifier = Modifier.clickable { }
+                modifier = Modifier.clickable {
+                    val intent = android.content.Intent(context, mx.edu.itson.alzheimerobregon.features.patient.ui.PatientDetailActivity::class.java)
+                    patientId?.let { intent.putExtra("patient_id", it) }
+                    context.startActivity(intent)
+                    if (context is android.app.Activity) {
+                        context.finish()
+                    }
+                }
             )
         }
 
@@ -269,6 +279,6 @@ fun InstrumentCard(
 @Composable
 fun InstrumentScreenPreview() {
     AlzheimerObregonTheme {
-        InstrumentScreen()
+        InstrumentScreen(patientId = "dummy_id")
     }
 }

@@ -1,5 +1,6 @@
 package mx.edu.itson.alzheimerobregon.features.patient.ui
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -34,6 +35,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import mx.edu.itson.alzheimerobregon.R
+import mx.edu.itson.alzheimerobregon.features.evaluation.ui.EvaluationHistoryActivity
 import mx.edu.itson.alzheimerobregon.ui.theme.AlzheimerObregonTheme
 
 class PatientDetailActivity : ComponentActivity() {
@@ -104,9 +106,9 @@ fun PatientDetailScreen(
             PatientInfoCard(patient = it)
         }
         Spacer(modifier = Modifier.height(16.dp))
-        ButtonEvaluacion()
+        ButtonEvaluacion(patientId = patient?.id)
         Spacer(modifier = Modifier.height(16.dp))
-        AccionesRapidas()
+        AccionesRapidas(patient?.id)
         Spacer(modifier = Modifier.height(24.dp))
         Text(
             text = "Historial de evaluaciones",
@@ -220,9 +222,14 @@ fun PatientInfoCard(patient: mx.edu.itson.alzheimerobregon.features.patient.Pati
 }
 
 @Composable
-fun ButtonEvaluacion() {
+fun ButtonEvaluacion(patientId: String?) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     Button(
-        onClick = {},
+        onClick = {
+            val intent = Intent(context, mx.edu.itson.alzheimerobregon.features.evaluation.ui.InstrumentsActivity::class.java)
+            patientId?.let { intent.putExtra("patient_id", it) }
+            context.startActivity(intent)
+        },
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp)
@@ -239,22 +246,27 @@ fun ButtonEvaluacion() {
 }
 
 @Composable
-fun AccionesRapidas() {
+fun AccionesRapidas(patientId: String?) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        SmallActionButton("Ver historial", Icons.AutoMirrored.Filled.ShowChart)
-        SmallActionButton("Exportar PDF", Icons.Default.Download)
+        SmallActionButton("Ver historial", Icons.AutoMirrored.Filled.ShowChart) {
+            val intent = Intent(context, EvaluationHistoryActivity::class.java)
+            patientId?.let { intent.putExtra("patient_id", it) }
+            context.startActivity(intent)
+        }
+        SmallActionButton("Exportar PDF", Icons.Default.Download) {}
     }
 }
 
 @Composable
-fun RowScope.SmallActionButton(text: String, icon: ImageVector) {
+fun RowScope.SmallActionButton(text: String, icon: ImageVector, onClick: () -> Unit) {
     Card(
-        modifier = Modifier.weight(1f).height(92.dp),
+        modifier = Modifier.weight(1f).height(92.dp).clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         border = BorderStroke(1.dp, Color(0xFFC4CBD0)),

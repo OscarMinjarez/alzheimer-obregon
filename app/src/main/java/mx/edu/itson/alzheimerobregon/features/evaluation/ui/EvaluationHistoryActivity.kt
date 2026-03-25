@@ -1,5 +1,6 @@
 package mx.edu.itson.alzheimerobregon.features.evaluation.ui
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -31,6 +32,7 @@ import mx.edu.itson.alzheimerobregon.features.evaluation.EvaluationType
 import mx.edu.itson.alzheimerobregon.ui.theme.AlzheimerObregonTheme
 import java.text.SimpleDateFormat
 import java.util.*
+import mx.edu.itson.alzheimerobregon.features.patient.ui.PatientDetailActivity
 
 class EvaluationHistoryActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,6 +52,7 @@ class EvaluationHistoryActivity : ComponentActivity() {
 
 @Composable
 fun EvaluationHistoryScreen(modifier: Modifier = Modifier) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     var selectedFilter by remember { mutableStateOf("Todos") }
 
     Column(
@@ -65,7 +68,15 @@ fun EvaluationHistoryScreen(modifier: Modifier = Modifier) {
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.clickable { }
+                modifier = Modifier.clickable(onClick = {
+                    // Volver a PatientDetailActivity
+                    val activity = context as? android.app.Activity
+                    val patientId: String? = activity?.intent?.getStringExtra("patient_id")
+                    val intent = Intent(context, PatientDetailActivity::class.java)
+                    patientId?.let { intent.putExtra("patient_id", it) }
+                    context.startActivity(intent)
+                    activity?.finish()
+                }),
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_chevron_left),
