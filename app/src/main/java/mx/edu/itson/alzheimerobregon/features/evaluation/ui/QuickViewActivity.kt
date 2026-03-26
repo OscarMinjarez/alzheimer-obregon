@@ -19,24 +19,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import mx.edu.itson.alzheimerobregon.R
 import mx.edu.itson.alzheimerobregon.ui.theme.AlzheimerObregonTheme
 
-class InstrumentsActivity : ComponentActivity() {
+class QuickViewActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        val patientId = intent.getStringExtra("patient_id")
         setContent {
             AlzheimerObregonTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    InstrumentScreen(
-                        modifier = Modifier.padding(innerPadding),
-                        patientId = patientId
-                    )
+                    QuickViewScreen(modifier = Modifier.padding(innerPadding))
                 }
             }
         }
@@ -44,7 +39,7 @@ class InstrumentsActivity : ComponentActivity() {
 }
 
 @Composable
-fun InstrumentScreen(modifier: Modifier = Modifier, patientId: String?) {
+fun QuickViewScreen(modifier: Modifier = Modifier) {
     val scrollState = rememberScrollState()
     val context = androidx.compose.ui.platform.LocalContext.current
 
@@ -54,7 +49,7 @@ fun InstrumentScreen(modifier: Modifier = Modifier, patientId: String?) {
             .background(Color.White)
             .verticalScroll(scrollState)
     ) {
-        //  Header
+        // Header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -74,9 +69,6 @@ fun InstrumentScreen(modifier: Modifier = Modifier, patientId: String?) {
                 fontWeight = FontWeight.Bold,
                 color = colorResource(id = R.color.azul_ultramar),
                 modifier = Modifier.clickable {
-                    val intent = android.content.Intent(context, mx.edu.itson.alzheimerobregon.features.patient.ui.PatientDetailActivity::class.java)
-                    patientId?.let { intent.putExtra("patient_id", it) }
-                    context.startActivity(intent)
                     if (context is android.app.Activity) {
                         context.finish()
                     }
@@ -86,7 +78,7 @@ fun InstrumentScreen(modifier: Modifier = Modifier, patientId: String?) {
 
         Column(modifier = Modifier.padding(horizontal = 24.dp)) {
             Text(
-                text = "Seleccionar instrumento",
+                text = "Resultados rápidos",
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 color = colorResource(id = R.color.azul_ultramar)
@@ -111,29 +103,35 @@ fun InstrumentScreen(modifier: Modifier = Modifier, patientId: String?) {
         ) {
             Spacer(modifier = Modifier.height(24.dp))
 
-            // 🔹 MMSE
-            InstrumentCard(
+            // MMSE
+            QuickInstrumentCard(
                 title = "MMSE",
                 subtitle = "Mini-Mental State Examination",
-                description = "Evaluación del estado cognitivo general",
-                frequency = "Cada 4 meses",
+                result = "22/30",
                 date = "14/01/2026",
-                daysAgo = "Hace 54 días",
-                score = "22/30",
+                details = listOf(
+                    "Orientación temporal: 4/5",
+                    "Orientación espacial: 4/5",
+                    "Memoria inmediata: 3/3",
+                    "Atención y cálculo: 3/5",
+                    "Recuerdo: 2/3",
+                    "Lenguaje: 6/9"
+                ),
                 imageRes = R.drawable.mmse_icon
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 🔹 Tinetti
-            InstrumentCard(
+            // Tinetti
+            QuickInstrumentCard(
                 title = "Tinetti",
                 subtitle = "Escala de Tinetti",
-                description = "Evaluación del equilibrio y la marcha",
-                frequency = "Cada 4 meses",
+                result = "20/28",
                 date = "14/01/2026",
-                daysAgo = "Hace 54 días",
-                score = "20/28",
+                details = listOf(
+                    "Equilibrio: 12/16",
+                    "Marcha: 8/12"
+                ),
                 imageRes = R.drawable.mmse_icon
             )
         }
@@ -141,19 +139,15 @@ fun InstrumentScreen(modifier: Modifier = Modifier, patientId: String?) {
 }
 
 @Composable
-fun InstrumentCard(
+fun QuickInstrumentCard(
     title: String,
     subtitle: String,
-    description: String,
-    frequency: String,
+    result: String,
     date: String,
-    daysAgo: String,
-    score: String,
+    details: List<String>,
     imageRes: Int,
     modifier: Modifier = Modifier
 ) {
-    val context = androidx.compose.ui.platform.LocalContext.current
-
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -163,21 +157,14 @@ fun InstrumentCard(
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
-
-            //  Header
-            // 🔹 Fila solo para icono + título
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     painter = painterResource(id = imageRes),
                     contentDescription = null,
                     tint = Color.Unspecified,
                     modifier = Modifier.size(32.dp)
                 )
-
                 Spacer(modifier = Modifier.width(12.dp))
-
                 Text(
                     text = title,
                     fontSize = 22.sp,
@@ -185,114 +172,33 @@ fun InstrumentCard(
                     color = colorResource(id = R.color.azul_ultramar)
                 )
             }
-
             Spacer(modifier = Modifier.height(8.dp))
-
-            Column {
+            Text(
+                text = subtitle,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = colorResource(id = R.color.azul_texto)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Resultado: $result",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = colorResource(id = R.color.azul_ultramar)
+            )
+            Text(
+                text = "Fecha: $date",
+                fontSize = 12.sp,
+                color = colorResource(id = R.color.gris_texto)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            details.forEach {
                 Text(
-                    text = subtitle,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = colorResource(id = R.color.azul_texto)
-                )
-
-                Text(
-                    text = description,
+                    text = it,
                     fontSize = 12.sp,
                     color = colorResource(id = R.color.gris_texto)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            //  Frecuencia
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    painter = painterResource(id = R.drawable.tinetti_icon),
-                    contentDescription = null,
-                    tint = Color.Unspecified,
-                    modifier = Modifier.size(16.dp)
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Text(
-                    text = "Frecuencia: $frequency",
-                    fontSize = 12.sp,
-                    color = colorResource(id = R.color.gris_texto)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            //  Caja
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        colorResource(id = R.color.azul_claro),
-                        RoundedCornerShape(8.dp)
-                    )
-                    .padding(12.dp)
-            ) {
-                Text(
-                    text = "Última aplicación",
-                    fontSize = 12.sp,
-                    color = colorResource(id = R.color.gris_texto)
-                )
-                Text(
-                    text = date,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
-                )
-                Text(
-                    text = "$daysAgo • Puntuación: $score",
-                    fontSize = 12.sp,
-                    color = colorResource(id = R.color.gris_texto)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            //  Botón
-            Button(
-                onClick = {
-                    val intent = android.content.Intent(context, QuickFormActivity::class.java)
-                    intent.putExtra("instrument", title)
-                    // Si tienes patientId, pásalo también
-                    if (context is android.app.Activity) {
-                        val activity = context as android.app.Activity
-                        val patientId = activity.intent.getStringExtra("patient_id")
-                        patientId?.let { intent.putExtra("patient_id", it) }
-                    }
-                    context.startActivity(intent)
-                },
-                modifier = Modifier
-                    .widthIn(max = 320.dp)
-                    .fillMaxWidth()
-                    .height(48.dp)
-                    .align(Alignment.CenterHorizontally),
-                shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = colorResource(id = R.color.azul_ultramar)
-                )
-            ) {
-                Text(
-                    text = "Aplicar $title ahora",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
                 )
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun InstrumentScreenPreview() {
-    AlzheimerObregonTheme {
-        InstrumentScreen(patientId = "dummy_id")
     }
 }
