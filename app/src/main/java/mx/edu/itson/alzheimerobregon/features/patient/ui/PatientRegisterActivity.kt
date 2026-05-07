@@ -6,7 +6,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -32,15 +34,21 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDefaults
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.getValue
@@ -64,6 +72,10 @@ import mx.edu.itson.alzheimerobregon.features.patient.Patient
 import mx.edu.itson.alzheimerobregon.features.patient.PatientRepository
 import mx.edu.itson.alzheimerobregon.features.patient.PatientRepositoryImpl
 import mx.edu.itson.alzheimerobregon.ui.theme.AlzheimerObregonTheme
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 data class PatientFormState(
     var fullName: String = "",
@@ -160,6 +172,7 @@ class PatientRegisterActivity : ComponentActivity() {
 
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
     formState: PatientFormState,
@@ -170,6 +183,35 @@ fun RegisterScreen(
     onCancel: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    var showDatePicker by remember { mutableStateOf(false) }
+    val datePickerState = rememberDatePickerState()
+
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        // Fix: selectedDateMillis is UTC. Use UTC TimeZone to avoid offset issues (day before).
+                        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                        sdf.timeZone = TimeZone.getTimeZone("UTC")
+                        val date = sdf.format(Date(millis))
+                        onFormChange(formState.copy(admissionDate = date))
+                    }
+                    showDatePicker = false
+                }) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Cancelar")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
 
     Column(
         modifier = Modifier.fillMaxSize()
@@ -388,19 +430,31 @@ fun RegisterScreen(
                         fontWeight = FontWeight.Bold,
                         color = colorResource(R.color.azul_ultramar)
                     )
-                    OutlinedTextField(
-                        value = formState.admissionDate,
-                        onValueChange = { input ->
-                            if (input.all { char -> char.isDigit() || char == '/' }) {
-                                onFormChange(formState.copy(admissionDate = input))
-                            }
-                        },
-                        placeholder = { Text("mm/dd/yyyy") },
-                        modifier = Modifier.fillMaxWidth(),
-                        trailingIcon = { Icon(Icons.Default.DateRange, null) },
-                        shape = RoundedCornerShape(12.dp),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { showDatePicker = true }
+                    ) {
+                        OutlinedTextField(
+                            value = formState.admissionDate,
+                            onValueChange = { },
+                            readOnly = true,
+                            enabled = false, // Disable to let Box consume click, but style manually
+                            placeholder = { Text("dd/mm/yyyy") },
+                            modifier = Modifier.fillMaxWidth(),
+                            trailingIcon = {
+                                Icon(Icons.Default.DateRange, null)
+                            },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                disabledTextColor = Color.Black,
+                                disabledBorderColor = colorResource(R.color.gris_texto),
+                                disabledPlaceholderColor = Color.Gray,
+                                disabledTrailingIconColor = colorResource(R.color.azul_ultramar),
+                                disabledContainerColor = Color.Transparent
+                            )
+                        )
+                    }
                 }
             }
             Card(
