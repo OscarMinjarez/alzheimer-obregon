@@ -320,8 +320,8 @@ fun RegisterScreen(
                     InputCampo(
                         "Phone *",
                         formState.primaryContactPhone,
-                        { if (it.length <= 10) onFormChange(formState.copy(primaryContactPhone = it)) },
-                        "e.g. 644 123 4567",
+                        { if (it.all { char -> char.isDigit() } && it.length <= 10) onFormChange(formState.copy(primaryContactPhone = it)) },
+                        "e.g. 6441234567",
                         KeyboardType.Phone
                     )
                 }
@@ -363,8 +363,8 @@ fun RegisterScreen(
                     InputCampo(
                         "Phone",
                         formState.secondaryContactPhone,
-                        { if (it.length <= 10) onFormChange(formState.copy(secondaryContactPhone = it)) },
-                        "e.g. 644 123 4567",
+                        { if (it.all { char -> char.isDigit() } && it.length <= 10) onFormChange(formState.copy(secondaryContactPhone = it)) },
+                        "e.g. 6441234567",
                         KeyboardType.Phone
                     )
                 }
@@ -390,11 +390,16 @@ fun RegisterScreen(
                     )
                     OutlinedTextField(
                         value = formState.admissionDate,
-                        onValueChange = { onFormChange(formState.copy(admissionDate = it)) },
+                        onValueChange = { input ->
+                            if (input.all { char -> char.isDigit() || char == '/' }) {
+                                onFormChange(formState.copy(admissionDate = input))
+                            }
+                        },
                         placeholder = { Text("mm/dd/yyyy") },
                         modifier = Modifier.fillMaxWidth(),
                         trailingIcon = { Icon(Icons.Default.DateRange, null) },
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(12.dp),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                     )
                 }
             }
@@ -504,7 +509,13 @@ fun InputCampo(
     Spacer(modifier = Modifier.height(8.dp))
     OutlinedTextField(
         value = value,
-        onValueChange = onValueChange,
+        onValueChange = { input ->
+            if (keyboardType == KeyboardType.Number || keyboardType == KeyboardType.Phone) {
+                if (input.all { it.isDigit() }) onValueChange(input)
+            } else {
+                onValueChange(input)
+            }
+        },
         placeholder = { Text(placeholder) },
         modifier = Modifier
             .fillMaxWidth()

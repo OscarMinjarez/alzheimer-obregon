@@ -102,4 +102,20 @@ class FirebaseFirestoreService {
             Result.failure(e)
         }
     }
+
+    /**
+     * Delete a document from a Firestore collection.
+     *
+     * @param collection the Firestore collection name
+     * @param documentId the id of the document to delete
+     * @return Result.success(true) on success or Result.failure(exception) on error
+     */
+    suspend fun delete(collection: String, documentId: String): Result<Boolean> {
+        return try {
+            this.firestore.collection(collection).document(documentId).delete().await()
+            Result.success(true)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

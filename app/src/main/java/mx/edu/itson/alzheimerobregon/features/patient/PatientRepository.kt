@@ -40,6 +40,14 @@ interface PatientRepository {
      * Returns a list of patients inside [Result.success] on success, or [Result.failure] on error.
      */
     suspend fun getAll(): Result<List<Patient>>
+
+    /**
+     * Delete a patient record by its id.
+     *
+     * @param id Document id of the patient to delete.
+     * @return [Result] containing true on success, or an exception on failure.
+     */
+    suspend fun delete(id: String): Result<Boolean>
 }
 
 /**
@@ -103,5 +111,12 @@ class PatientRepositoryImpl(private val firestoreService: FirebaseFirestoreServi
      */
     override suspend fun getAll(): Result<List<Patient>> {
         return this.firestoreService.getAll(collectionName)
+    }
+
+    /**
+     * Delete a patient from Firestore.
+     */
+    override suspend fun delete(id: String): Result<Boolean> {
+        return this.firestoreService.delete(collectionName, id)
     }
 }
