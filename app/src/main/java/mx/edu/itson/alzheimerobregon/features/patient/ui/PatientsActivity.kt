@@ -22,6 +22,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
@@ -34,6 +37,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,6 +53,7 @@ import mx.edu.itson.alzheimerobregon.ui.theme.AlzheimerObregonTheme
 import mx.edu.itson.alzheimerobregon.R
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 
 
 class PatientsActivity : ComponentActivity() {
@@ -77,11 +84,23 @@ fun PatientsScreen(
 ) {
     val patients by viewModel.patients.collectAsState()
     val error by viewModel.error.collectAsState()
+    val success by viewModel.success.collectAsState()
     val context = androidx.compose.ui.platform.LocalContext.current
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+    var selectedPatientId by remember { mutableStateOf("") }
+    var selectedPatientName by remember { mutableStateOf("") }
 
     // Lanzar la carga de pacientes solo una vez
     LaunchedEffect(Unit) {
         viewModel.fetchPatients()
+    }
+
+    // Limpiar mensajes después de 3 segundos
+    LaunchedEffect(success, error) {
+        if (success != null || error != null) {
+            kotlinx.coroutines.delay(3000)
+            viewModel.clearMessages()
+        }
     }
 
     // Lista de imágenes de perfil disponibles
@@ -113,12 +132,41 @@ fun PatientsScreen(
             Spacer(modifier = Modifier.height(12.dp))
             FiltrosPacientes()
             Spacer(modifier = Modifier.height(16.dp))
+
+            // Mostrar mensaje de éxito
+            if (success != null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFFD4EDDA))
+                        .padding(12.dp)
+                ) {
+                    Text(
+                        text = success ?: "",
+                        color = Color(0xFF155724),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            // Mostrar mensaje de error
             if (error != null) {
-                Text(
-                    text = error ?: "",
-                    color = Color.Red,
-                    modifier = Modifier.padding(16.dp)
-                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFFF8D7DA))
+                        .padding(12.dp)
+                ) {
+                    Text(
+                        text = error ?: "",
+                        color = Color(0xFF721C24),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
             }
             Column(
                 modifier = Modifier
@@ -137,6 +185,11 @@ fun PatientsScreen(
                             val intent = Intent(context, PatientDetailActivity::class.java)
                             intent.putExtra("patient_id", patient.id)
                             context.startActivity(intent)
+                        },
+                        onDelete = {
+                            selectedPatientId = patient.id
+                            selectedPatientName = patient.fullName
+                            showDeleteConfirm = true
                         }
                     )
                 }
@@ -156,6 +209,34 @@ fun PatientsScreen(
                 contentDescription = "Agregar paciente"
             )
         }
+    }
+
+    // Diálogo de confirmación de eliminación
+    if (showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text("Eliminar paciente") },
+            text = { Text("¿Estás seguro de que deseas eliminar a $selectedPatientName? Esta acción no se puede deshacer.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.deletePatient(selectedPatientId)
+                        showDeleteConfirm = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                ) {
+                    Text("Eliminar", color = Color.White)
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = { showDeleteConfirm = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
+                ) {
+                    Text("Cancelar", color = Color.White)
+                }
+            }
+        )
     }
 }
 
@@ -294,7 +375,8 @@ fun PatientCardItem(
     lastEval: String,
     statusColor: Color,
     imageRes: Int,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onDelete: () -> Unit = {}
 ) {
     Card(
         modifier = Modifier
@@ -338,6 +420,17 @@ fun PatientCardItem(
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = colorResource(R.color.gris_texto)
+                )
+            }
+
+            IconButton(
+                onClick = { onDelete() },
+                modifier = Modifier.size(40.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Eliminar paciente",
+                    tint = Color.Red
                 )
             }
 

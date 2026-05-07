@@ -19,6 +19,9 @@ class PatientsViewModel(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
+    private val _success = MutableStateFlow<String?>(null)
+    val success: StateFlow<String?> = _success
+
     fun fetchPatients() {
         viewModelScope.launch {
             val result = repository.getAll()
@@ -28,6 +31,24 @@ class PatientsViewModel(
                 _error.value = it.message
             }
         }
+    }
+
+    fun deletePatient(patientId: String) {
+        viewModelScope.launch {
+            val result = repository.delete(patientId)
+            result.onSuccess {
+                // Remover el paciente de la lista
+                _patients.value = _patients.value.filter { it.id != patientId }
+                _success.value = "Paciente eliminado correctamente"
+            }.onFailure {
+                _error.value = "Error al eliminar paciente: ${it.message}"
+            }
+        }
+    }
+
+    fun clearMessages() {
+        _error.value = null
+        _success.value = null
     }
 }
 
